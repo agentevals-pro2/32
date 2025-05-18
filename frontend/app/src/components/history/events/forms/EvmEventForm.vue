@@ -44,6 +44,7 @@ const eventSubtype = ref<string>('');
 const asset = ref<string>('');
 const amount = ref<string>('');
 const usdValue = ref<string>('');
+const isInformational = computed(() => get(eventType) === 'informational');
 const address = ref<string>('');
 const locationLabel = ref<string>('');
 const notes = ref<string>('');
@@ -334,6 +335,7 @@ const addressSuggestions = computed(() => getAddresses(Blockchain.ETH));
       v-model:usd-value="usdValue"
       :v$="v$"
       :datetime="datetime"
+      :hide-price-inputs="isInformational"
     />
 
     <RuiDivider class="my-10" />

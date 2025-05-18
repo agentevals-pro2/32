@@ -17,10 +17,12 @@ const props = withDefaults(
     amount: string;
     usdValue: string;
     disableAsset?: boolean;
+    hidePriceInputs?: boolean;
     v$: Validation;
   }>(),
   {
     disableAsset: false,
+    hidePriceInputs: false,
   },
 );
 
@@ -30,7 +32,7 @@ const emit = defineEmits<{
   (e: 'update:usd-value', usdValue: string): void;
 }>();
 
-const { datetime, amount, usdValue, asset, disableAsset } = toRefs(props);
+const { datetime, amount, usdValue, asset, disableAsset, hidePriceInputs } = toRefs(props);
 
 const assetModel = computed({
   get() {
@@ -160,36 +162,52 @@ async function fetchHistoricPrices() {
 }
 
 watch([datetime, asset], async () => {
+  if (get(hidePriceInputs))
+    return;
   await fetchHistoricPrices();
 });
 
 watch(fetchedAssetToUsdPrice, (price) => {
+  if (get(hidePriceInputs))
+    return;
   set(assetToUsdPrice, price);
   onAssetToUsdPriceChange(true);
 });
 
 watch(assetToUsdPrice, () => {
+  if (get(hidePriceInputs))
+    return;
   onAssetToUsdPriceChange();
 });
 
 watch(usdValue, () => {
+  if (get(hidePriceInputs))
+    return;
   onUsdValueChange();
 });
 
 watch(fetchedAssetToFiatPrice, (price) => {
+  if (get(hidePriceInputs))
+    return;
   set(assetToFiatPrice, price);
   onAssetToFiatPriceChanged(true);
 });
 
 watch(assetToFiatPrice, () => {
+  if (get(hidePriceInputs))
+    return;
   onAssetToFiatPriceChanged();
 });
 
 watch(fiatValue, () => {
+  if (get(hidePriceInputs))
+    return;
   onFiatValueChange();
 });
 
 watch(amount, () => {
+  if (get(hidePriceInputs))
+    return;
   if (get(isCurrentCurrencyUsd)) {
     onAssetToUsdPriceChange();
     onUsdValueChange();
@@ -201,6 +219,8 @@ watch(amount, () => {
 });
 
 async function submitPrice(payload: NewHistoryEventPayload): Promise<ActionStatus<ValidationErrors | string>> {
+  if (get(hidePriceInputs))
+    return { success: true };
   const assetVal = get(asset);
   const timestamp = convertToTimestamp(get(datetime), DateFormat.DateMonthYearHourMinuteSecond);
 
@@ -271,7 +291,7 @@ defineExpose({
     </div>
 
     <TwoFieldsAmountInput
-      v-if="isCurrentCurrencyUsd"
+      v-if="!hidePriceInputs && isCurrentCurrencyUsd"
       v-model:primary-value="assetToUsdPrice"
       v-model:secondary-value="usdValueModel"
       class="mb-5"
@@ -294,7 +314,7 @@ defineExpose({
     />
 
     <TwoFieldsAmountInput
-      v-else
+      v-else-if="!hidePriceInputs"
       v-model:primary-value="assetToFiatPrice"
       v-model:secondary-value="fiatValue"
       class="mb-5"
